@@ -84,25 +84,31 @@ class InboundStuffController extends Controller
 public function destroy($id)
     {
         try {
-            $inboundData = InboundStuff::where('id', $id)->first();
+            $inboundData = InboundStuff::where('id', $id)->with('stuff.stuffStock')->first();
             // simpan data dri inbound yang diperlukan / akan digunakan nnti setelah delete
             $stuffId = $inboundData['stuff_id'];
             $totalInbound = $inboundData['total'];
-            $inboundData->delete();
-
+            
             // kurangi total_available sblumnya dengan total de awal yang akan dihapus
             $dataStock = StuffStock::where('stuff_id', $inboundData['stuff_id'])->first();
             $total_available = (int) $dataStock['total_available'] - (int)$totalInbound;
-
+            
             $minusTotalStock = $dataStock->update(['total_available' => $total_available]);
-
-            if ($minusTotalStock) {
-                $updateStuffWithInboundAndStock = Stuff::where('id',$stuffId)->with('inboundStuffs', 'stuffStock')->first();
-
+            
+            if ((int)$minusTotalStock > (int)$inboundData['total_available']) { 
+                return ApiFormatter::sendResponse (400, "bad request", 'Jumlah total inbound yang akan dihapus lebih besar dari total available stuff saat ini!');
+            }else{
+                $inboundData->delete();
+                $minusTotalStock = $dataStock->update(['total_available' => $total_available]);
+                if ($minusTotalStock){
+                    $updatedStuffWithInboundAndStock = Stuff::where('id', $inboundData['stuff_id'])->with('inboundStuffs','stuffStock')->first();
+                    
+                    $inboundData->delete();
+                    return ApiFormatter::sendResponse(200,'Success',$updatedStuffWithInboundAndStock);
+                }
+            }
             // delete ibound terakhir agar data stuff_id di inbound bisa digunakan untuk mengammbil data terbaru
             // $inboundData->delete();
-            return ApiFormatter::sendResponse(200, "success", $updateStuffWithInboundAndStock);
-            }
         } catch (\Exception $err) {
             return ApiFormatter::sendResponse(400, "bad request", $err->getMessage());
         }

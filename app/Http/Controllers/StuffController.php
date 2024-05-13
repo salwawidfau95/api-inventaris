@@ -93,16 +93,28 @@ class StuffController extends Controller
     }
 
     public function destroy($id)
-    {
-        try{
-            $checkProses = Stuff::where('id', $id)->delete();
-            if ($checkProses) {
-                return ApiFormatter::sendResponse(200, 'success', 'Berhasil hapus data stuff');
-            }
-        } catch (\Exception $err) {
-            return ApiFormatter::sendResponse(400, 'bad request', $err->getMessage());
+{
+    try {
+        $checkProses = Stuff::with('inboundStuffs', 'stuffStock', 'lendings')->find($id);
+
+        if ($checkProses->inboundStuffs()) {
+            return ApiFormatter::sendResponse(400, "bad request", "Tidak dapat menghapus data stuff, sudah terdapat data inbound");
+        } 
+        elseif ($checkProses->stuffStock()) {
+            return ApiFormatter::sendResponse(400, "bad request", "Tidak dapat menghapus data stuff, sudah terdapat data stuff stock");
         }
+        elseif($checkProses->lendings()) {
+            return ApiFormatter::sendResponse(400, "bad request", "Tidak dapat menghapus data stuff, sudah terdapat data lending");
+        }
+        else {
+            $checkProses->delete();
+            return ApiFormatter::sendResponse(200, true, "berhasil hapus data barang dengan id $id", ['id' => $id]);
+        }
+
+    } catch (\Exception $err) {
+        return ApiFormatter::sendResponse(400, 'bad request', $err->getMessage());
     }
+}
 
     public function trash()
     {

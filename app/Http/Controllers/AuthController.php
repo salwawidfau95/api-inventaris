@@ -24,7 +24,7 @@ class AuthController extends Controller
 
         $credentials = $request->only(['email', 'password']);
 
-        if (! $token = Auth::attempt($credentials)) // ! buat nampilin kalau gacocok 
+        if (! $token = Auth::attempt($credentials)) // ! buat nampilin kalau gacocok //package jwt yg diinstall buat token 
         {
             return ApiFormatter::sendResponse(400, 'User not found', 'Silahkan cek kembali email & password anda!!!');
         }
@@ -33,8 +33,7 @@ class AuthController extends Controller
             'access_token' => $token, //token yg simpen di session
             'token_type' => 'bearer', //jenis token
             'user' => auth()->user(), //dta info yg login dr username/pw
-            'expires_in'=> auth()->factory() //untuk menentukan waktu simpan loginnya
-            ->getTTL() * 60 * 24
+            'expires_in'=> auth()->factory()->getTTL() * 60 * 24 //untuk menentukan waktu simpan loginnya
         ];
 
         return ApiFormatter::sendResponse(200, 'Logged-in', $respondWithToken);

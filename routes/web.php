@@ -43,9 +43,8 @@ $router->get('/inbound/trash', 'InboundStuffController@trash');
 
 //LENDING
 $router->post('/lending/store', 'LendingController@store');
-$router->get('/lending/index', 'LendingController@index');
-$router->get('/lending/trash', 'LendingController@trash');
-
+$router->get('/lending', 'LendingController@index');
+    
 
 //dinamis
 
@@ -68,4 +67,10 @@ $router->delete('/inbound/delete/{id}', 'InboundStuffController@destroy');
 $router->get('/inbound/restore/{id}', 'InboundStuffController@restore');
 $router->delete('/inbound/permanen-delete/{id}', 'InboundStuffController@permanenDelete');
 
+//Lending 
+$router->delete('/lending/delete/{id}', 'LendingController@destroy');
+$router->get('/lendings/{id}', 'LendingController@show');
 
+//RESTORATION
+//buat data restoration (pengembalian) menggunakan params data lending_id agar data pengembalian dibuat berdasarkan data peminjamannya
+$router->post('/restoration/{lending_id}', 'RestorationController@store');
